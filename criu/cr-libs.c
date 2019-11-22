@@ -18,6 +18,7 @@ struct so_desc {
 	unsigned major, minor, patch;
 };
 static struct so_desc crlibs[SHARED_LIB_LAST] = {
+	{ "libbsd.so", "Can't set title and using self-made strlcpy()" },
 };
 
 static int link_version(const char *link, unsigned *major,

@@ -163,8 +163,8 @@ static bool blobs_matches(VmaEntry *vdso_img, VmaEntry *vvar_img,
 
 		pr_debug("offset: %lx ?= %lx\n", sym_offset, rt_sym_offset);
 		if (sym_offset != rt_sym_offset) {
-			pr_info("[%zu]`%s` offset differs: %lx != %lx (rt)\n",
-				i, sym_name, sym_offset, rt_sym_offset);
+			pr_info("[%d]`%s` offset differs: %lx != %lx (rt)\n",
+				(int)i, sym_name, sym_offset, rt_sym_offset);
 			return false;
 		}
 	}

@@ -149,6 +149,7 @@ static bool blobs_matches(VmaEntry *vdso_img, VmaEntry *vvar_img,
 	unsigned long rt_vdso_size = sym_rt->vdso_size;
 	size_t i;
 
+	pr_debug("vdso size: %lx ?= %lx\n", vdso_size, rt_vdso_size);
 	if (vdso_size != rt_vdso_size) {
 		pr_info("size differs: %lx != %lx (rt)\n",
 			vdso_size, rt_vdso_size);
@@ -160,6 +161,7 @@ static bool blobs_matches(VmaEntry *vdso_img, VmaEntry *vvar_img,
 		unsigned long rt_sym_offset	= sym_rt->symbols[i].offset;
 		char *sym_name			= sym_img->symbols[i].name;
 
+		pr_debug("offset: %lx ?= %lx\n", sym_offset, rt_sym_offset);
 		if (sym_offset != rt_sym_offset) {
 			pr_info("[%zu]`%s` offset differs: %lx != %lx (rt)\n",
 				i, sym_name, sym_offset, rt_sym_offset);
@@ -172,12 +174,15 @@ static bool blobs_matches(VmaEntry *vdso_img, VmaEntry *vvar_img,
 		unsigned long vvar_size = vma_entry_len(vvar_img);
 		unsigned long rt_vvar_size = sym_rt->vvar_size;
 
+		pr_debug("vvar size: %lx ?= %lx\n", vvar_size, rt_vvar_size);
 		if (vvar_size != rt_vvar_size) {
 			pr_info("vvar size differs: %lx != %lx (rt)\n",
 				vdso_size, rt_vdso_size);
 			return false;
 		}
 
+		pr_debug("vdso goes first: %d ?= %d\n",
+				!!vdso_firstly, !!sym_rt->vdso_before_vvar);
 		if (vdso_firstly != sym_rt->vdso_before_vvar) {
 			pr_info("[%s] pair has different order\n",
 				vdso_firstly ? "vdso/vvar" : "vvar/vdso");
@@ -185,6 +190,7 @@ static bool blobs_matches(VmaEntry *vdso_img, VmaEntry *vvar_img,
 		}
 	}
 
+	pr_debug("blob matches\n");
 	return true;
 }
 
@@ -323,6 +329,7 @@ int vdso_proxify(struct vdso_maps *rt, bool *added_proxy,
 		 vma_vvar ? (unsigned long)vma_vvar->end : VVAR_BAD_ADDR);
 
 	*added_proxy = false;
+	pr_debug("blob_matches()?\n");
 	if (blobs_matches(vma_vdso, vma_vvar, &s, &rt->sym) && !force_trampolines)
 		return remap_rt_vdso(vma_vdso, vma_vvar, rt);
 

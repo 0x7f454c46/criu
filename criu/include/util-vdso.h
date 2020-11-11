@@ -46,7 +46,7 @@ static inline bool vdso_is_present(struct vdso_maps *m)
 	return m->vdso_start != VDSO_BAD_ADDR;
 }
 
-#define VDSO_SYMBOL_INIT	{ .offset = VDSO_BAD_ADDR, }
+#define VDSO_SYMBOL_INIT	{ .offset = VDSO_BAD_ADDR, .name = {0} }
 
 #define VDSO_SYMTABLE_INIT						\
 	{								\

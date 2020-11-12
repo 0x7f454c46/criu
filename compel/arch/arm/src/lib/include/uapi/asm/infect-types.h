@@ -17,6 +17,10 @@ typedef struct {
 	long			uregs[18];
 } user_regs_struct_t;
 
+#define compel_arch_fetch_thread_area(tctl) 0
+#define compel_arch_get_tls_task(ctl, tls)
+#define compel_arch_get_tls_thread(tctl, tls)
+
 typedef struct user_vfp		user_fpregs_struct_t;
 
 #define ARM_cpsr		uregs[16]

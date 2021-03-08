@@ -1122,6 +1122,12 @@ void __export_unmap(void)
 	sys_munmap(bootstrap_start, bootstrap_len - vdso_rt_size);
 }
 
+void __export_hack(void)
+{
+	asm volatile("vzeroupper" :::);
+	sys_gettid();
+}
+
 /*
  * This function unmaps all VMAs, which don't belong to
  * the restored process or the restorer.

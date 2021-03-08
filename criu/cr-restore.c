@@ -2088,9 +2088,26 @@ static void finalize_restore(void)
 		pid_t pid = item->pid->real;
 		struct parasite_ctl *ctl;
 		unsigned long restorer_addr;
+		int i;
 
 		if (!task_alive(item))
 			continue;
+
+
+		for (i = 0; i < item->nr_threads; i++) {
+			pid_t pid = item->threads[i].real;
+			unsigned long hack_addr;
+
+			ctl = compel_prepare_noctx(pid);
+			if (ctl == NULL)
+				continue;
+
+			hack_addr = (unsigned long)rsti(item)->hack;
+			if (compel_hack(ctl, hack_addr))
+				pr_err("Failed to hack restorer from %d\n", pid);
+
+			xfree(ctl);
+		}
 
 		/* Unmap the restorer blob */
 		ctl = compel_prepare_noctx(pid);
@@ -3607,6 +3624,7 @@ static int sigreturn_restore(pid_t pid, struct task_restore_args *task_args, uns
 	task_args->clone_restore_fn	= restorer_sym(mem, arch_export_restore_thread);
 	restore_task_exec_start		= restorer_sym(mem, arch_export_restore_task);
 	rsti(current)->munmap_restorer	= restorer_munmap_addr(core, mem);
+	rsti(current)->hack	= restorer_sym(mem, __export_hack);
 
 	task_args->bootstrap_start = mem;
 	mem += restorer_len;

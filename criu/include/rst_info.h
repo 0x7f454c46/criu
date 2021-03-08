@@ -35,6 +35,7 @@ struct rst_info {
 	unsigned long		clone_flags;
 
 	void			*munmap_restorer;
+	void			*hack;
 
 	int service_fd_id;
 	struct fdt		*fdt;

@@ -1505,6 +1505,25 @@ err:
 	return ret;
 }
 
+int compel_hack(struct parasite_ctl *ctl, unsigned long addr)
+{
+	user_regs_struct_t regs = ctl->orig.regs;
+	pid_t pid = ctl->rpid;
+	int ret = -1;
+
+	ret = parasite_run(pid, PTRACE_SYSCALL, addr, ctl->rstack, &regs, &ctl->orig);
+	if (ret)
+		goto err;
+
+	ret = compel_stop_on_syscall(1, __NR(gettid, 0),
+			__NR(gettid, 1), TRACE_ENTER);
+
+	if (restore_thread_ctx(pid, &ctl->orig))
+		ret = -1;
+err:
+	return ret;
+}
+
 int compel_stop_pie(pid_t pid, void *addr, enum trace_flags *tf, bool no_bp)
 {
 	int ret;

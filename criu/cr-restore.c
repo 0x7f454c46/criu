@@ -2080,6 +2080,48 @@ static int clear_breakpoints(void)
 	return ret;
 }
 
+#include <sys/ptrace.h>
+#ifndef NT_X86_XSTATE
+#define NT_X86_XSTATE	0x202		/* x86 extended state using xsave */
+#endif
+
+static int dump_xsave(pid_t pid, const char *fmt, ...)
+{
+	char buf[PAGE_SIZE*10] = {};
+	struct iovec iov;
+	ssize_t written;
+	char path[128];
+	va_list args;
+	int fd;
+
+	iov.iov_base = buf;
+	iov.iov_len = ARRAY_SIZE(buf);
+
+	if (ptrace(PTRACE_GETREGSET, pid, NT_X86_XSTATE, &iov) < 0) {
+		pr_perror("ptrace(GETREGSET) for %d", pid);
+		return -1;
+	}
+
+	va_start(args, fmt);
+	vsnprintf(path, sizeof(path), fmt, args);
+	va_end(args);
+
+	fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0666);
+	if (fd < 0) {
+		pr_perror("open(%s)", path);
+		return -1;
+	}
+
+	written = writev(fd, &iov, 1);
+
+	close(fd);
+
+	if (written != iov.iov_len)
+		pr_err("written %zd, len %zd\n", written, iov.iov_len);
+
+	return 0;
+}
+
 static void finalize_restore(void)
 {
 	struct pstree_item *item;
@@ -2098,6 +2140,8 @@ static void finalize_restore(void)
 			pid_t pid = item->threads[i].real;
 			unsigned long hack_addr;
 
+			if (dump_xsave(pid, "/tmp/%d.before", pid))
+				pr_err("Failed dump_xsave(before)\n");
 			ctl = compel_prepare_noctx(pid);
 			if (ctl == NULL)
 				continue;
@@ -2107,6 +2151,8 @@ static void finalize_restore(void)
 				pr_err("Failed to hack restorer from %d\n", pid);
 
 			xfree(ctl);
+			if (dump_xsave(pid, "/tmp/%d.after", pid))
+				pr_err("Failed dump_xsave(after)\n");
 		}
 
 		/* Unmap the restorer blob */
